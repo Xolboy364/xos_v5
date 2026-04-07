@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>xOS v2 — Web IDE</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0d1117;--bg2:#161b22;--bg3:#21262d;--bg4:#30363d;
+  --border:#30363d;--text:#c9d1d9;--text2:#8b949e;
+  --green:#3fb950;--blue:#58a6ff;--red:#f85149;
+  --yellow:#e3b341;--purple:#d2a8ff;--cyan:#39d353;
+  --orange:#ffa657;
+}
+body{font-family:'Segoe UI',monospace;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex;flex-direction:column}
+/* HEADER */
+header{background:var(--bg2);border-bottom:1px solid var(--border);padding:8px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.logo{color:var(--blue);font-weight:700;font-size:16px;letter-spacing:1px}
+.logo span{color:var(--green)}
+.badge{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:2px 10px;font-size:11px;color:var(--text2)}
+.badge.on{border-color:var(--green);color:var(--green)}
+header .spacer{flex:1}
+.btn{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:5px 14px;border-radius:6px;cursor:pointer;font-size:12px;transition:.2s}
+.btn:hover{background:var(--bg4);border-color:var(--blue)}
+.btn.primary{background:#1f6feb;border-color:#1f6feb;color:#fff}
+.btn.primary:hover{background:#388bfd}
+.btn.success{background:#1a7f37;border-color:#238636;color:#fff}
+.btn.success:hover{background:#2ea043}
+.btn.danger{background:#b62324;border-color:#da3633;color:#fff}
+.btn.danger:hover{background:#da3633}
+.btn.purple{background:#6e40c9;border-color:#8957e5;color:#fff}
+.btn.purple:hover{background:#8957e5}
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:220px 1fr 320px;grid-template-rows:1fr 200px;gap:0;flex:1;overflow:hidden}
+/* SIDEBAR */
+.sidebar{grid-row:1/3;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.sidebar-section{border-bottom:1px solid var(--border)}
+.sidebar-title{padding:8px 12px;font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;background:var(--bg3)}
+/* DEMOLAR */
+.demo-list{overflow-y:auto;max-height:200px}
+.demo-item{padding:6px 12px;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--bg3)}
+.demo-item:hover{background:var(--bg3)}
+.demo-item .icon{font-size:14px}
+/* BRAIN */
+.brain-panel{flex:1;overflow-y:auto;padding:8px}
+.brain-stat{display:flex;justify-content:space-between;padding:3px 0;font-size:11px;border-bottom:1px solid var(--bg3)}
+.brain-stat .key{color:var(--text2)}
+.brain-stat .val{color:var(--green);font-weight:600}
+.brain-chat-input{display:flex;gap:4px;padding:8px;border-top:1px solid var(--border)}
+.brain-chat-input input{flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:4px;font-size:11px}
+.brain-chat-input input:focus{outline:none;border-color:var(--blue)}
+/* EDITOR */
+.editor-area{display:flex;flex-direction:column;overflow:hidden}
+.editor-toolbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:6px 12px;display:flex;gap:6px;align-items:center;flex-shrink:0}
+.editor-toolbar .sep{width:1px;height:20px;background:var(--border);margin:0 4px}
+.editor-wrap{flex:1;position:relative;overflow:hidden}
+textarea.editor{width:100%;height:100%;background:var(--bg);color:var(--text);border:none;outline:none;padding:12px;font-family:'Courier New',monospace;font-size:13px;line-height:1.6;resize:none;tab-size:4}
+textarea.editor::selection{background:#264f78}
+/* OUTPUT */
+.output-area{border-top:1px solid var(--border);background:var(--bg2);display:flex;flex-direction:column}
+.output-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0}
+.tab{padding:6px 16px;font-size:12px;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent}
+.tab.active{color:var(--text);border-bottom-color:var(--blue)}
+.tab:hover{color:var(--text)}
+.output-content{flex:1;overflow-y:auto;font-family:'Courier New',monospace;font-size:12px;padding:8px 12px}
+/* RIGHT PANEL */
+.right-panel{background:var(--bg2);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;grid-row:1/3}
+.panel-section{border-bottom:1px solid var(--border);flex-shrink:0}
+.panel-title{padding:7px 12px;font-size:11px;color:var(--text2);text-transform:uppercase;background:var(--bg3);cursor:pointer;display:flex;justify-content:space-between}
+.panel-body{padding:8px;overflow:auto}
+/* REGISTRLAR */
+.reg-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px}
+.reg-item{background:var(--bg3);border-radius:4px;padding:4px 6px;font-size:11px;font-family:monospace;display:flex;justify-content:space-between}
+.reg-name{color:var(--text2)}
+.reg-val{color:var(--yellow)}
+.reg-val.changed{color:var(--orange);animation:blink .5s}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+/* FLAGLAR */
+.flags{display:flex;gap:6px;padding:6px 8px}
+.flag{width:32px;height:32px;border-radius:6px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;transition:.3s}
+.flag.on{border-color:var(--red);color:var(--red);background:#3d0000}
+.flag.off{color:var(--text2)}
+/* DEVICES */
+.device-item{display:flex;justify-content:space-between;padding:3px 0;font-size:11px;border-bottom:1px solid var(--bg3)}
+.device-name{color:var(--text2)}
+.device-val{color:var(--cyan);font-family:monospace}
+/* GPIO PINS */
+.gpio-pins{display:flex;flex-wrap:wrap;gap:3px;padding:6px}
+.gpio-pin{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);cursor:pointer;font-size:9px;display:flex;align-items:center;justify-content:center;color:var(--text2);transition:.2s}
+.gpio-pin.out-high{background:#1a7f37;border-color:#238636;color:#fff}
+.gpio-pin.out-low{background:var(--bg3);border-color:var(--border)}
+.gpio-pin:hover{border-color:var(--blue)}
+/* DISPLAY */
+#display-canvas{display:block;width:100%;image-rendering:pixelated;background:#000}
+/* MEMORY */
+.mem-dump{font-family:'Courier New',monospace;font-size:10px;line-height:1.5;color:var(--text2)}
+.mem-dump .addr{color:var(--purple)}
+.mem-dump .hex{color:var(--text)}
+.mem-dump .ascii{color:var(--green)}
+/* BRAIN OUTPUT */
+.brain-out{font-size:11px;line-height:1.6;white-space:pre-wrap;color:var(--text)}
+.brain-out .user{color:var(--blue);font-weight:600}
+.brain-out .ai{color:var(--green)}
+/* STATUS BAR */
+.statusbar{background:var(--bg3);border-top:1px solid var(--border);padding:3px 12px;font-size:11px;color:var(--text2);display:flex;gap:16px;flex-shrink:0}
+.statusbar span{color:var(--text)}
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 16px;font-size:13px;z-index:1000;animation:slideIn .3s;max-width:300px}
+.toast.ok{border-color:var(--green);color:var(--green)}
+.toast.err{border-color:var(--red);color:var(--red)}
+.toast.info{border-color:var(--blue);color:var(--blue)}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+/* LOADING */
+.loading{opacity:.5;pointer-events:none}
+.spinner{display:inline-block;width:12px;height:12px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:4px}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* SCROLLBAR */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--text2)}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">x<span>OS</span> v2</div>
+  <div class="badge">xCPU-1</div>
+  <div class="badge" id="badge-brain">Brain AI</div>
+  <div class="badge" id="badge-status">Tayyor</div>
+  <div class="spacer"></div>
+  <button class="btn success" onclick="runCode()">▶ Ishlatish</button>
+  <button class="btn primary" onclick="assembleCode()">⚙ Assemble</button>
+  <button class="btn purple" onclick="makeElf()">📦 xELF</button>
+  <button class="btn" onclick="resetMachine()">↺ Reset</button>
+  <button class="btn" onclick="saveBrain()">💾 Brain</button>
+</header>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-title">📁 Demo Dasturlar</div>
+      <div class="demo-list" id="demo-list">Yuklanmoqda...</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">🧠 Brain AI</div>
+      <div class="brain-panel" id="brain-stats">
+        <div class="brain-stat"><span class="key">Holat</span><span class="val" id="bs-mode">Offline</span></div>
+        <div class="brain-stat"><span class="key">Neyronlar H1</span><span class="val" id="bs-h1">-</span></div>
+        <div class="brain-stat"><span class="key">Neyronlar H2</span><span class="val" id="bs-h2">-</span></div>
+        <div class="brain-stat"><span class="key">NN iteratsiya</span><span class="val" id="bs-iter">-</span></div>
+        <div class="brain-stat"><span class="key">Patternlar</span><span class="val" id="bs-pat">-</span></div>
+        <div class="brain-stat"><span class="key">Qoidalar</span><span class="val" id="bs-rules">-</span></div>
+        <div class="brain-stat"><span class="key">Dasturlar</span><span class="val" id="bs-progs">-</span></div>
+        <div class="brain-stat"><span class="key">Sessiyalar</span><span class="val" id="bs-sess">-</span></div>
+        <div style="margin-top:8px">
+          <button class="btn" style="width:100%;font-size:11px;margin-bottom:4px" onclick="brainLearn()">🔄 O'rganish</button>
+          <button class="btn" style="width:100%;font-size:11px" onclick="showBrainChat()">💬 Suhbat</button>
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-section" style="flex:1">
+      <div class="sidebar-title">🤖 Brain Gen</div>
+      <div style="padding:8px">
+        <input id="gen-input" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:4px;font-size:11px;margin-bottom:4px" placeholder="fibonacci 10, gcd, primes...">
+        <button class="btn" style="width:100%;font-size:11px" onclick="brainGenerate()">⚡ Generatsiya</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDITOR -->
+  <div class="editor-area">
+    <div class="editor-toolbar">
+      <button class="btn" onclick="clearEditor()">🗑 Tozalash</button>
+      <div class="sep"></div>
+      <button class="btn" onclick="insertSnippet('mov')">MOV</button>
+      <button class="btn" onclick="insertSnippet('load')">LOAD</button>
+      <button class="btn" onclick="insertSnippet('loop')">Loop</button>
+      <button class="btn" onclick="insertSnippet('func')">Funksiya</button>
+      <div class="sep"></div>
+      <button class="btn" onclick="analyzeCode()">🔍 Tahlil</button>
+      <div class="sep"></div>
+      <span style="font-size:11px;color:var(--text2)" id="editor-info">0 satr</span>
+    </div>
+    <div class="editor-wrap">
+      <textarea class="editor" id="editor" spellcheck="false"
+        placeholder="; xASM kodi shu yerga yozing
+; Misol:
+.section text
+    LOAD X0, #10
+    LOAD X1, #20
+    ADD  X2, X0, X1
+    PRINT X2
+    HALT"
+        oninput="onEditorChange()"></textarea>
+    </div>
+  </div>
+
+  <!-- OUTPUT / BOTTOM -->
+  <div class="output-area" style="grid-column:2;grid-row:2">
+    <div class="output-tabs">
+      <div class="tab active" onclick="showTab('output')" id="tab-output">📤 Chiqish</div>
+      <div class="tab" onclick="showTab('listing')" id="tab-listing">📋 Listing</div>
+      <div class="tab" onclick="showTab('disasm')" id="tab-disasm">🔧 Disassemble</div>
+      <div class="tab" onclick="showTab('brain-out')" id="tab-brain-out">🧠 Brain</div>
+      <div class="tab" onclick="showTab('memory')" id="tab-memory">💾 Xotira</div>
+    </div>
+    <div class="output-content" id="tab-output-content"></div>
+    <div class="output-content" id="tab-listing-content" style="display:none"></div>
+    <div class="output-content" id="tab-disasm-content" style="display:none"></div>
+    <div class="output-content" id="tab-brain-out-content" style="display:none"></div>
+    <div class="output-content" id="tab-memory-content" style="display:none">
+      <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center">
+        <span style="font-size:11px;color:var(--text2)">Adres:</span>
+        <input id="mem-addr" value="0x20000" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:3px 8px;border-radius:4px;font-size:11px;width:100px">
+        <button class="btn" onclick="loadMemory()" style="font-size:11px">Ko'rish</button>
+      </div>
+      <div id="mem-content" class="mem-dump"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+    <!-- REGISTRLAR -->
+    <div class="panel-section">
+      <div class="panel-title" onclick="togglePanel('regs')">
+        <span>📊 Registrlar</span><span id="regs-arrow">▼</span>
+      </div>
+      <div class="panel-body" id="panel-regs">
+        <div class="flags" id="flags-display">
+          <div class="flag off" id="flag-N">N</div>
+          <div class="flag off" id="flag-Z">Z</div>
+          <div class="flag off" id="flag-C">C</div>
+          <div class="flag off" id="flag-V">V</div>
+        </div>
+        <div class="reg-grid" id="reg-grid"></div>
+      </div>
+    </div>
+
+    <!-- DEVICES -->
+    <div class="panel-section">
+      <div class="panel-title" onclick="togglePanel('devices')">
+        <span>🔌 Qurilmalar</span><span id="devices-arrow">▼</span>
+      </div>
+      <div class="panel-body" id="panel-devices" style="padding:6px 8px">
+        <div class="device-item"><span class="device-name">UART TX</span><span class="device-val" id="dev-uart-tx">0</span></div>
+        <div class="device-item"><span class="device-name">Timer0 fires</span><span class="device-val" id="dev-t0">0</span></div>
+        <div class="device-item"><span class="device-name">Timer1 fires</span><span class="device-val" id="dev-t1">0</span></div>
+        <div class="device-item"><span class="device-name">Display frames</span><span class="device-val" id="dev-disp">0</span></div>
+        <div class="device-item"><span class="device-name">GPIO out</span><span class="device-val" id="dev-gpio">0x00000000</span></div>
+        <div class="device-item"><span class="device-name">Bus tsikl</span><span class="device-val" id="dev-ticks">0</span></div>
+        <div style="margin-top:6px">
+          <button class="btn" style="font-size:10px;width:100%" onclick="showGPIO()">GPIO Pinlar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DISPLAY -->
+    <div class="panel-section">
+      <div class="panel-title" onclick="togglePanel('display')">
+        <span>🖥 Display (320×240)</span><span id="display-arrow">▼</span>
+      </div>
+      <div class="panel-body" id="panel-display" style="padding:4px">
+        <canvas id="display-canvas" width="320" height="240"></canvas>
+        <div style="display:flex;gap:4px;margin-top:4px">
+          <button class="btn" style="font-size:10px;flex:1" onclick="clearDisplay()">Tozala</button>
+          <button class="btn" style="font-size:10px;flex:1" onclick="refreshDisplay()">Yangilash</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TIMER CONTROL -->
+    <div class="panel-section">
+      <div class="panel-title" onclick="togglePanel('timer')">
+        <span>⏱ Timer</span><span id="timer-arrow">▼</span>
+      </div>
+      <div class="panel-body" id="panel-timer" style="padding:8px">
+        <div style="display:flex;gap:4px;align-items:center;margin-bottom:4px">
+          <input id="timer-load" value="1000" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:3px 6px;border-radius:4px;font-size:11px;width:80px">
+          <label style="font-size:11px;color:var(--text2)">
+            <input type="checkbox" id="timer-periodic" checked> Periodic
+          </label>
+        </div>
+        <button class="btn" style="width:100%;font-size:11px" onclick="startTimer()">▶ Timer ishga tushir</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- STATUS BAR -->
+<div class="statusbar">
+  <span>xOS v2</span>
+  <span>Instr: <span id="st-instr">0</span></span>
+  <span>MIPS: <span id="st-mips">0</span></span>
+  <span>Heap: <span id="st-heap">0</span>B</span>
+  <span>NN loss: <span id="st-loss">-</span></span>
+  <span id="st-halted" style="color:var(--text2)">Tayyor</span>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// API
+// ═══════════════════════════════════════════════
+const BASE = '';
+let prevRegs = new Array(16).fill(0);
+
+async function api(path, body={}, method='POST') {
+  try {
+    const opts = method==='GET'
+      ? {method:'GET'}
+      : {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)};
+    const r = await fetch(BASE+path, opts);
+    return await r.json();
+  } catch(e) {
+    return {ok:false, error: e.message};
+  }
+}
+
+// ═══════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════
+function toast(msg, type='info', dur=2500) {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(), dur);
+}
+
+// ═══════════════════════════════════════════════
+// EDITOR
+// ═══════════════════════════════════════════════
+const editor = document.getElementById('editor');
+
+function onEditorChange() {
+  const lines = editor.value.split('\n').length;
+  document.getElementById('editor-info').textContent = `${lines} satr`;
+}
+
+function clearEditor() {
+  if(editor.value && !confirm('Kodni tozalash?')) return;
+  editor.value = '';
+  onEditorChange();
+}
+
+const SNIPPETS = {
+  mov:  `    MOV  X0, X1          ; X0 = X1`,
+  load: `    LOAD X0, #42         ; X0 = 42`,
+  loop: `    LOAD X0, #10         ; counter\nloop:\n    ADDI X0, X0, #-1\n    CMPI X0, #0\n    JGT  loop`,
+  func: `; Funksiya chaqirish\n    CALL myfunc\n    HALT\nmyfunc:\n    ; kod shu yerda\n    ADDI X0, X0, #1\n    RET`,
+};
+
+function insertSnippet(name) {
+  const s = SNIPPETS[name] || '';
+  const pos = editor.selectionStart;
+  editor.value = editor.value.slice(0,pos) + '\n' + s + '\n' + editor.value.slice(pos);
+  editor.focus();
+  onEditorChange();
+}
+
+// ═══════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════
+function showTab(name) {
+  ['output','listing','disasm','brain-out','memory'].forEach(t=>{
+    document.getElementById(`tab-${t}-content`).style.display = 'none';
+    document.getElementById(`tab-${t}`).classList.remove('active');
+  });
+  document.getElementById(`tab-${name}-content`).style.display = 'block';
+  document.getElementById(`tab-${name}`).classList.add('active');
+  if(name==='memory') loadMemory();
+}
+
+// ═══════════════════════════════════════════════
+// RUN
+// ═══════════════════════════════════════════════
+async function runCode() {
+  const src = editor.value.trim();
+  if(!src) { toast('Kod yozing!','err'); return; }
+  setBadge('Ishlamoqda...','#e3b341');
+  const out = document.getElementById('tab-output-content');
+  out.innerHTML = '<span class="spinner"></span> Ishlamoqda...';
+  showTab('output');
+
+  const r = await api('/api/run', {source: src, max_cycles: 2000000});
+  if(r.ok) {
+    let html = '';
+    if(r.output) {
+      html += `<div style="color:var(--green);font-size:14px;margin-bottom:8px;white-space:pre-wrap">${esc(r.output)}</div><hr style="border-color:var(--border);margin:8px 0">`;
+    }
+    html += `<table style="font-size:11px;width:100%;border-collapse:collapse">`;
+    html += row('Instruksiya', r.instr);
+    html += row('Tezlik', r.mips+' MIPS');
+    html += row('Vaqt', r.time_sec+'s');
+    html += row('Holat', r.halted ? '✅ To\'xtadi' : '⏸ Limit');
+    html += row('Tsikl', r.cycles);
+    html += `</table>`;
+    if(r.brain_eval) {
+      html += `<hr style="border-color:var(--border);margin:8px 0">`;
+      html += `<pre style="font-size:11px;color:var(--text2)">${esc(r.brain_eval)}</pre>`;
+    }
+    out.innerHTML = html;
+    updateRegs(r.regs, r.flags);
+    updateStatus(r.instr, r.mips, r.halted);
+    setBadge(r.halted?'✅ Tayyor':'⏸ Tayyor','');
+    toast(`✅ ${r.instr} instr, ${r.mips} MIPS`,'ok');
+    refreshDevices();
+    refreshBrainStats();
+    showTab('output');
+  } else {
+    out.innerHTML = `<div style="color:var(--red)">❌ Xato: ${esc(r.error||'')}</div><pre style="font-size:10px;color:var(--text2);margin-top:8px">${esc(r.trace||'')}</pre>`;
+    setBadge('Xato','#f85149');
+    toast('❌ '+r.error,'err');
+  }
+}
+
+function row(k,v) {
+  return `<tr><td style="color:var(--text2);padding:2px 8px 2px 0">${k}</td><td style="color:var(--yellow);font-family:monospace">${v}</td></tr>`;
+}
+
+// ═══════════════════════════════════════════════
+// ASSEMBLE
+// ═══════════════════════════════════════════════
+async function assembleCode() {
+  const src = editor.value.trim();
+  if(!src) { toast('Kod yozing!','err'); return; }
+  const r = await api('/api/assemble', {source: src});
+  const el = document.getElementById('tab-listing-content');
+  showTab('listing');
+  if(r.ok) {
+    let html = `<div style="color:var(--text2);margin-bottom:6px;font-size:11px">Binary: ${r.size} byte | Labels: ${Object.keys(r.labels||{}).length}</div>`;
+    html += `<div style="margin-bottom:8px;font-size:11px">`;
+    if(r.labels && Object.keys(r.labels).length) {
+      html += Object.entries(r.labels).map(([k,v])=>`<span style="color:var(--purple)">${k}</span>=<span style="color:var(--yellow)">${v}</span>`).join('  ');
+    }
+    html += `</div>`;
+    html += `<table style="font-size:11px;font-family:monospace;width:100%;border-collapse:collapse">`;
+    html += `<tr style="color:var(--text2);border-bottom:1px solid var(--border)"><th style="text-align:left;padding:2px 8px 2px 0">Adres</th><th style="text-align:left;padding:2px 8px 2px 0">Hex</th><th style="text-align:left;padding:2px 0">Manba</th></tr>`;
+    (r.listing||[]).forEach(l=>{
+      html += `<tr style="border-bottom:1px solid var(--bg3)">
+        <td style="color:var(--purple);padding:2px 8px 2px 0">${l.addr}</td>
+        <td style="color:var(--yellow);padding:2px 8px 2px 0">${l.hex||''}</td>
+        <td style="color:var(--text)">${esc(l.src||'')}</td>
+      </tr>`;
+    });
+    html += `</table>`;
+    // Hex dump
+    if(r.hex) {
+      html += `<div style="margin-top:10px;color:var(--text2);font-size:10px">Raw hex:<br><span style="color:var(--cyan)">${r.hex.match(/.{1,2}/g).join(' ')}</span></div>`;
+    }
+    el.innerHTML = html;
+    toast(`✅ ${r.size} byte`,'ok');
+  } else {
+    el.innerHTML = `<div style="color:var(--red)">❌ ${esc(r.error)}</div>`;
+    toast('❌ '+r.error,'err');
+  }
+}
+
+// ═══════════════════════════════════════════════
+// ELF
+// ═══════════════════════════════════════════════
+async function makeElf() {
+  const src = editor.value.trim();
+  if(!src) { toast('Kod yozing!','err'); return; }
+  const r = await api('/api/compile_elf', {source: src});
+  const el = document.getElementById('tab-disasm-content');
+  showTab('disasm');
+  if(r.ok) {
+    el.innerHTML = `<pre style="font-size:11px;color:var(--text)">${esc(r.dump||'')}</pre>
+<div style="margin-top:8px;color:var(--text2);font-size:10px">Hex (birinchi 64 byte):<br><span style="color:var(--cyan)">${(r.hex||'').substring(0,128).match(/.{1,2}/g).join(' ')}</span></div>`;
+    toast(`✅ xELF: ${r.size} byte`,'ok');
+  } else {
+    el.innerHTML = `<div style="color:var(--red)">❌ ${esc(r.error)}</div>`;
+    toast('❌ '+r.error,'err');
+  }
+}
+
+// ═══════════════════════════════════════════════
+// RESET
+// ═══════════════════════════════════════════════
+async function resetMachine() {
+  const r = await api('/api/reset');
+  if(r.ok) {
+    toast('↺ Mashina qayta ishga tushirildi','info');
+    updateRegs(new Array(16).fill(0), {N:0,Z:0,C:0,V:0});
+    updateStatus(0,0,false);
+    document.getElementById('tab-output-content').innerHTML = '<div style="color:var(--text2)">Mashina reset qilindi.</div>';
+    refreshDevices();
+  }
+}
+
+// ═══════════════════════════════════════════════
+// REGISTRLAR
+// ═══════════════════════════════════════════════
+const REG_NAMES = ['X0','X1','X2','X3','X4','X5','X6','X7','X8','X9','X10','X11','X12','SP','LR','PC'];
+
+function initRegGrid() {
+  const g = document.getElementById('reg-grid');
+  g.innerHTML = REG_NAMES.map((n,i)=>
+    `<div class="reg-item">
+      <span class="reg-name">${n}</span>
+      <span class="reg-val" id="reg-${i}">0x00000000</span>
+    </div>`
+  ).join('');
+}
+
+function updateRegs(regs, flags) {
+  if(!regs) return;
+  regs.forEach((v,i)=>{
+    const el = document.getElementById(`reg-${i}`);
+    if(!el) return;
+    const hex = '0x'+((v>>>0).toString(16).padStart(8,'0').toUpperCase());
+    if(v !== prevRegs[i]) {
+      el.textContent = hex;
+      el.classList.add('changed');
+      setTimeout(()=>el.classList.remove('changed'),500);
+    } else {
+      el.textContent = hex;
+    }
+  });
+  prevRegs = [...regs];
+
+  if(flags) {
+    ['N','Z','C','V'].forEach(f=>{
+      const el = document.getElementById(`flag-${f}`);
+      if(el) {
+        el.className = `flag ${flags[f]?'on':'off'}`;
+      }
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════
+// STATUS
+// ═══════════════════════════════════════════════
+function updateStatus(instr, mips, halted) {
+  document.getElementById('st-instr').textContent = instr;
+  document.getElementById('st-mips').textContent  = mips;
+  document.getElementById('st-halted').textContent = halted ? '✅ To\'xtadi' : 'Tayyor';
+  document.getElementById('st-halted').style.color = halted ? 'var(--green)' : 'var(--text2)';
+}
+
+function setBadge(text, color) {
+  const el = document.getElementById('badge-status');
+  el.textContent = text;
+  el.style.borderColor = color||'var(--border)';
+  el.style.color = color||'var(--text2)';
+}
+
+// ═══════════════════════════════════════════════
+// BRAIN STATS
+// ═══════════════════════════════════════════════
+async function refreshBrainStats() {
+  const r = await api('/api/brain/status','','GET');
+  if(!r.ok) return;
+  const s = r.status || '';
+  // Parse
+  const get = (key) => {
+    const m = s.match(new RegExp(key+'\\s*:\\s*(.+)'));
+    return m ? m[1].trim() : '-';
+  };
+  document.getElementById('bs-mode').textContent  = '100% Offline';
+  document.getElementById('bs-sess').textContent  = get('Sessiyalar');
+  document.getElementById('bs-pat').textContent   = (get('Patternlar')||'').split(' ')[0];
+  document.getElementById('bs-rules').textContent = get('Qoidalar');
+  document.getElementById('bs-progs').textContent = get('Dasturlar');
+  document.getElementById('bs-h1').textContent    = (get('H1')||'').split(' ')[0];
+  document.getElementById('bs-h2').textContent    = (get('H2')||'').split(' ')[0];
+  document.getElementById('bs-iter').textContent  = (get('Iter')||'').split(',')[0];
+  const lossM = s.match(/Loss:\s*([\d.]+)/);
+  if(lossM) {
+    document.getElementById('st-loss').textContent = parseFloat(lossM[1]).toFixed(6);
+  }
+}
+
+// ═══════════════════════════════════════════════
+// BRAIN OPERATIONS
+// ═══════════════════════════════════════════════
+async function brainLearn() {
+  const r = await api('/api/brain/learn');
+  if(r.ok) {
+    toast(`✅ Pattern: ${r.patterns}, Qoida: ${r.rules}`,'ok');
+    refreshBrainStats();
+  }
+}
+
+async function brainGenerate() {
+  const task = document.getElementById('gen-input').value.trim();
+  if(!task) { toast('Vazifa kiriting','err'); return; }
+  const r = await api('/api/brain/generate', {task});
+  if(r.ok && r.code) {
+    editor.value = r.code;
+    onEditorChange();
+    toast('✅ Kod generatsiya qilindi','ok');
+  }
+}
+
+let brainChatMode = false;
+function showBrainChat() {
+  brainChatMode = true;
+  showTab('brain-out');
+  const el = document.getElementById('tab-brain-out-content');
+  if(!el.innerHTML) {
+    el.innerHTML = '<div style="color:var(--text2);font-size:11px">Brain bilan suhbat boshlang...<br><br>Misol: "salom", "status", "gen fibonacci 10", "patterns", "rules"</div>';
+  }
+  // Input qo'shish
+  let inp = document.getElementById('brain-chat-inp');
+  if(!inp) {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'display:flex;gap:4px;padding:6px;border-top:1px solid var(--border)';
+    wrap.innerHTML = `<input id="brain-chat-inp" placeholder="Brain ga xabar..." style="flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:4px;font-size:11px">
+    <button class="btn" onclick="sendBrainChat()" style="font-size:11px">Yuborish</button>`;
+    document.getElementById('tab-brain-out-content').parentElement.appendChild(wrap);
+    wrap.querySelector('input').addEventListener('keydown', e=>{ if(e.key==='Enter') sendBrainChat(); });
+  }
+}
+
+async function sendBrainChat() {
+  const inp = document.getElementById('brain-chat-inp');
+  const msg = inp.value.trim();
+  if(!msg) return;
+  inp.value = '';
+  const el = document.getElementById('tab-brain-out-content');
+  el.innerHTML += `\n<div style="margin:4px 0"><span style="color:var(--blue);font-weight:600">Siz:</span> ${esc(msg)}</div>`;
+  const r = await api('/api/brain/chat', {message: msg});
+  if(r.ok) {
+    el.innerHTML += `<div style="margin:4px 0;color:var(--green)"><span style="font-weight:600">🧠 Brain:</span> <span style="white-space:pre-wrap">${esc(r.response)}</span></div>`;
+    // Agar gen javob bo'lsa, editorga qo'yish
+    if(r.response && (r.response.includes('.section') || r.response.includes('LOAD') || r.response.includes('HALT'))) {
+      const codeMatch = r.response.match(/[;.](.*?)(?=\n\n|$)/s);
+    }
+  }
+  el.scrollTop = el.scrollHeight;
+  refreshBrainStats();
+}
+
+async function analyzeCode() {
+  const src = editor.value.trim();
+  if(!src) { toast('Kod yozing!','err'); return; }
+  const r = await api('/api/brain/analyze', {source: src});
+  showTab('brain-out');
+  if(r.ok) {
+    document.getElementById('tab-brain-out-content').innerHTML =
+      `<pre style="font-size:11px;color:var(--text)">${esc(r.result||'')}</pre>`;
+  }
+}
+
+async function saveBrain() {
+  const r = await api('/api/brain/save','','GET');
+  if(r.ok) toast('💾 Brain saqlandi','ok');
+  else toast('❌ '+r.error,'err');
+}
+
+// ═══════════════════════════════════════════════
+// DEMOLAR
+// ═══════════════════════════════════════════════
+const DEMO_ICONS = {
+  hello:'👋', count10:'🔢', fibonacci:'🌀', factorial:'⚡',
+  gcd:'🔗', power:'💪', sum_n:'➕', primes:'🔮',
+  bubble_sort:'📊', binary_search:'🔍', random_walk:'🎲',
+};
+
+async function loadDemos() {
+  const r = await api('/api/demos','','GET');
+  const el = document.getElementById('demo-list');
+  if(r.ok && r.demos) {
+    el.innerHTML = r.demos.map(d=>
+      `<div class="demo-item" onclick="loadDemo('${d}')">
+        <span class="icon">${DEMO_ICONS[d]||'📄'}</span>
+        <span>${d}</span>
+      </div>`
+    ).join('');
+  }
+}
+
+async function loadDemo(name) {
+  const r = await api('/api/brain/program', {name});
+  if(r.ok && r.code) {
+    editor.value = r.code;
+    onEditorChange();
+    toast(`📄 '${name}' yuklandi`,'info');
+  }
+}
+
+async function runDemo(name) {
+  setBadge('Ishlamoqda...','#e3b341');
+  const r = await api('/api/demo', {name});
+  if(r.ok) {
+    const el = document.getElementById('tab-output-content');
+    let html = `<div style="color:var(--text2);margin-bottom:6px">Demo: <span style="color:var(--blue)">${name}</span></div>`;
+    if(r.output) html += `<div style="color:var(--green);font-size:14px;margin-bottom:8px;white-space:pre-wrap">${esc(r.output)}</div><hr style="border-color:var(--border);margin:8px 0">`;
+    html += `<table style="font-size:11px;width:100%;border-collapse:collapse">`;
+    html += row('Instruksiya', r.instr);
+    html += row('Tezlik', r.mips+' MIPS');
+    html += row('Holat', r.halted?'✅':'⏸');
+    html += `</table>`;
+    if(r.brain_eval) html += `<hr style="border-color:var(--border);margin:8px 0"><pre style="font-size:11px;color:var(--text2)">${esc(r.brain_eval)}</pre>`;
+    el.innerHTML = html;
+    updateRegs(r.regs, null);
+    showTab('output');
+    setBadge('✅ Tayyor','');
+    refreshBrainStats();
+    toast(`✅ Demo '${name}': ${r.instr} instr`,'ok');
+  } else {
+    toast('❌ '+r.error,'err');
+    setBadge('Xato','#f85149');
+  }
+}
+
+// ═══════════════════════════════════════════════
+// DEVICES
+// ═══════════════════════════════════════════════
+async function refreshDevices() {
+  const [st, timer] = await Promise.all([
+    api('/api/status','','GET'),
+    api('/api/timer','','GET'),
+  ]);
+  if(st.ok && st.devices) {
+    const d = st.devices;
+    document.getElementById('dev-uart-tx').textContent = d.uart?.tx_len ?? 0;
+    document.getElementById('dev-disp').textContent    = d.display?.frames ?? 0;
+    document.getElementById('dev-gpio').textContent    = '0x'+(d.gpio?.out||'0x0').replace('0x','');
+    document.getElementById('dev-ticks').textContent   = d.ticks ?? 0;
+    if(st.memory) {
+      document.getElementById('st-heap').textContent   = st.memory.heap_used ?? 0;
+    }
+  }
+  if(timer.ok) {
+    document.getElementById('dev-t0').textContent = timer.timer0?.fires ?? 0;
+    document.getElementById('dev-t1').textContent = timer.timer1?.fires ?? 0;
+  }
+}
+
+// ═══════════════════════════════════════════════
+// MEMORY
+// ═══════════════════════════════════════════════
+async function loadMemory() {
+  const addrStr = document.getElementById('mem-addr').value.trim();
+  const addr = addrStr.startsWith('0x') ? parseInt(addrStr, 16) : parseInt(addrStr);
+  const r = await api('/api/memory', {addr, size: 128});
+  const el = document.getElementById('mem-content');
+  if(r.ok) {
+    el.innerHTML = `<pre style="font-size:10px;line-height:1.6">${esc(r.dump||'')}</pre>`;
+  } else {
+    el.innerHTML = `<span style="color:var(--red)">${esc(r.error)}</span>`;
+  }
+}
+
+// ═══════════════════════════════════════════════
+// DISPLAY
+// ═══════════════════════════════════════════════
+const canvas = document.getElementById('display-canvas');
+const ctx    = canvas.getContext('2d');
+
+async function refreshDisplay() {
+  const r = await api('/api/display','','GET');
+  if(!r.ok || !r.pixels) return;
+  const idata = ctx.createImageData(canvas.width, canvas.height);
+  r.pixels.forEach((row, ry)=>{
+    row.forEach((p, rx)=>{
+      // RGB565 → RGBA
+      const r5 = (p>>11)&0x1F, g6=(p>>5)&0x3F, b5=p&0x1F;
+      const R=(r5<<3)|((r5>>2)&7), G=(g6<<2)|((g6>>4)&3), B=(b5<<3)|((b5>>2)&7);
+      for(let sy=0;sy<4;sy++) for(let sx=0;sx<4;sx++) {
+        const idx = ((ry*4+sy)*canvas.width + (rx*4+sx))*4;
+        idata.data[idx]=R; idata.data[idx+1]=G; idata.data[idx+2]=B; idata.data[idx+3]=255;
+      }
+    });
+  });
+  ctx.putImageData(idata, 0, 0);
+}
+
+async function clearDisplay() {
+  await api('/api/display/clear', {color:0});
+  ctx.fillStyle='#000'; ctx.fillRect(0,0,canvas.width,canvas.height);
+  toast('Display tozalandi','info');
+}
+
+// ═══════════════════════════════════════════════
+// GPIO
+// ═══════════════════════════════════════════════
+function showGPIO() {
+  showTab('output');
+  api('/api/gpio','','GET').then(r=>{
+    if(!r.ok) return;
+    let html = '<div style="margin-bottom:8px;font-size:11px;color:var(--text2)">GPIO Pinlar (bosish uchun klik)</div><div style="display:flex;flex-wrap:wrap;gap:4px">';
+    (r.pins||[]).forEach((val,i)=>{
+      html += `<div onclick="toggleGPIO(${i})" style="width:36px;height:36px;border-radius:6px;border:2px solid ${val?'var(--green)':'var(--border)'};background:${val?'#1a3a1f':'var(--bg3)'};cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9px;color:${val?'var(--green)':'var(--text2)'}">
+        <span>${i}</span><span>${val?'1':'0'}</span>
+      </div>`;
+    });
+    html += '</div>';
+    document.getElementById('tab-output-content').innerHTML = html;
+  });
+}
+
+async function toggleGPIO(pin) {
+  const r = await api('/api/gpio','','GET');
+  if(!r.ok) return;
+  const cur = r.pins[pin];
+  await api('/api/gpio/set', {pin, val: !cur});
+  showGPIO();
+}
+
+// ═══════════════════════════════════════════════
+// TIMER
+// ═══════════════════════════════════════════════
+async function startTimer() {
+  const load     = parseInt(document.getElementById('timer-load').value)||1000;
+  const periodic = document.getElementById('timer-periodic').checked;
+  const r = await api('/api/timer/start', {load, periodic});
+  if(r.ok) toast(`⏱ Timer: load=${load}, periodic=${periodic}`,'ok');
+}
+
+// ═══════════════════════════════════════════════
+// PANEL TOGGLE
+// ═══════════════════════════════════════════════
+function togglePanel(name) {
+  const body  = document.getElementById(`panel-${name}`);
+  const arrow = document.getElementById(`${name}-arrow`);
+  const vis   = body.style.display !== 'none';
+  body.style.display  = vis ? 'none' : 'block';
+  arrow.textContent   = vis ? '▶' : '▼';
+}
+
+// ═══════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ═══════════════════════════════════════════════
+// KEYBOARD SHORTCUTS
+// ═══════════════════════════════════════════════
+document.addEventListener('keydown', e=>{
+  if(e.ctrlKey || e.metaKey) {
+    if(e.key==='Enter') { e.preventDefault(); runCode(); }
+    else if(e.key==='b') { e.preventDefault(); assembleCode(); }
+    else if(e.key==='e') { e.preventDefault(); makeElf(); }
+    else if(e.key==='r') { e.preventDefault(); resetMachine(); }
+  }
+});
+
+// Tab ichida tab character
+editor.addEventListener('keydown', e=>{
+  if(e.key==='Tab') {
+    e.preventDefault();
+    const s=editor.selectionStart, end=editor.selectionEnd;
+    editor.value=editor.value.slice(0,s)+'    '+editor.value.value.slice(end);
+    editor.selectionStart=editor.selectionEnd=s+4;
+  }
+});
+
+// ═══════════════════════════════════════════════
+// AUTO REFRESH
+// ═══════════════════════════════════════════════
+setInterval(()=>{
+  api('/api/regs','','GET').then(r=>{
+    if(r.ok) updateRegs(r.regs, r.flags);
+  });
+}, 3000);
+
+setInterval(refreshDevices, 5000);
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+(async function init() {
+  initRegGrid();
+  await Promise.all([loadDemos(), refreshBrainStats(), refreshDevices()]);
+  document.getElementById('badge-brain').classList.add('on');
+  document.getElementById('badge-brain').textContent = '🧠 Brain ON';
+
+  // Demo dastur o'rnatish
+  editor.value = `; xOS v2 — Salom dunyo
+; Ctrl+Enter = Ishlatish  |  Ctrl+B = Assemble  |  Ctrl+E = xELF
+.section text
+    LOAD X0, #10        ; i = 10
+    LOAD X1, #0         ; sum = 0
+loop:
+    ADD  X1, X1, X0    ; sum += i
+    ADDI X0, X0, #-1   ; i--
+    CMPI X0, #0
+    JGT  loop
+    PRINT X1            ; Natija: 55
+    HALT`;
+  onEditorChange();
+
+  toast('🚀 xOS v2 Web IDE tayyor! Ctrl+Enter = Ishlatish','info', 3000);
+})();
+</script>
+</body>
+</html>
