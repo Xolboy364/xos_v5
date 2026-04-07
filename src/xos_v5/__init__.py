@@ -1,1 +1,1 @@
-# xOS Package
+"""xOS v5 Package"""
