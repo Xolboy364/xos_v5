@@ -2,7 +2,7 @@ name: Build xOS v5.0 APK
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, asosiy ]
   workflow_dispatch:
 
 jobs:
