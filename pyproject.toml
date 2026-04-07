@@ -9,8 +9,12 @@ author_email = "sodiq@pulse.com"
 [tool.briefcase.app.xos_v5]
 formal_name = "xOS v5.0"
 description = "Shaxsiy Virtual Laboratoriya"
+long_description = "O'z virtual protsessori (xCPU-1) va Brain AI tizimiga ega shaxsiy virtual muhit."
 sources = ["src/xos_ilova"]
-# Bu yerda xatolik bo'lishi mumkin bo'lgan joyni to'g'irladim:
+# Litsenziyani Briefcase talab qilgan formatda yozamiz:
+license.text = "MIT"
+license.file = "LICENSE"
+
 requires = [
     "toga==0.4.5",
 ]
@@ -25,7 +29,6 @@ requires = ["toga-gtk==0.4.5"]
 requires = ["toga-winforms==0.4.5"]
 
 [tool.briefcase.app.xos_v5.android]
-# Android uchun maxsus sozlamalar
 requires = ["toga-android==0.4.5"]
 
 [tool.briefcase.app.xos_v5.iOS]
