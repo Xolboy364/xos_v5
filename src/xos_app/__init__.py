@@ -1,1 +1,1 @@
-"""xOS v3.2 — O'z Operatsion Tizimi"""
+from .app import main
