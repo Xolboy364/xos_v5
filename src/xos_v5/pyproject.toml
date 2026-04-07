@@ -1,0 +1,23 @@
+[tool.briefcase]
+project_name = "xOS v5.0"
+bundle = "com.sodiq"
+version = "5.0.0"
+display_name = "xOS v5.0"
+author = "Sodiq"
+author_email = "sodiq@pulse.com"
+
+[tool.briefcase.app.xos_v5]
+formal_name = "xOS v5.0"
+description = "Shaxsiy Virtual Laboratoriya"
+sources = ["src"]
+license.text = "MIT"
+license.file = "LICENSE"
+
+requires = [
+    "toga==0.4.5",
+]
+
+[tool.briefcase.app.xos_v5.android]
+requires = [
+    "toga-android==0.4.5",
+]
