@@ -1,0 +1,23 @@
+name: Build Android APK
+on: [push]
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcairo2-dev pkg-config python3-dev libgirepository1.0-dev
+          pip install briefcase toga
+      - name: Build APK
+        run: briefcase package android --no-input
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: xOS-v5-APK
+          path: build/xos/android/gradle/app/build/outputs/apk/debug/*.apk
