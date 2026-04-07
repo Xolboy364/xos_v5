@@ -9,9 +9,7 @@ author_email = "sodiq@pulse.com"
 [tool.briefcase.app.xos_v5]
 formal_name = "xOS v5.0"
 description = "Shaxsiy Virtual Laboratoriya"
-long_description = "O'z virtual protsessori (xCPU-1) va Brain AI tizimiga ega shaxsiy virtual muhit."
-sources = ["src/xos_ilova"]
-# Litsenziyani Briefcase talab qilgan formatda yozamiz:
+sources = ["src"]
 license.text = "MIT"
 license.file = "LICENSE"
 
@@ -19,17 +17,7 @@ requires = [
     "toga==0.4.5",
 ]
 
-[tool.briefcase.app.xos_v5.macOS]
-requires = ["toga-cocoa==0.4.5"]
-
-[tool.briefcase.app.xos_v5.linux]
-requires = ["toga-gtk==0.4.5"]
-
-[tool.briefcase.app.xos_v5.windows]
-requires = ["toga-winforms==0.4.5"]
-
 [tool.briefcase.app.xos_v5.android]
-requires = ["toga-android==0.4.5"]
-
-[tool.briefcase.app.xos_v5.iOS]
-requires = ["toga-iOS==0.4.5"]
+requires = [
+    "toga-android==0.4.5",
+]
