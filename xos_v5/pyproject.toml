@@ -1,0 +1,42 @@
+[tool.briefcase]
+project_name = "xOS"
+bundle = "uz.xos"
+version = "5.0.0"
+url = "https://github.com/xos-team/xos-android"
+license = "MIT"
+author = "xOS Team"
+author_email = "xos@xos.uz"
+
+[tool.briefcase.app.app]
+formal_name = "xOS v5.0"
+description = "O'z Operatsion Tizimi — xCPU-1 + Brain AI (Persistent + Fon O'rganish) + Hamza/Zafar + RL"
+long_description = """
+xOS v5.0 — yangilangan Brain AI bilan:
+• Persistent xotira: o'rganganlarni diskka saqlaydi
+• Fon o'rganish: ilova yopiq bo'lsa ham tinmay o'rganadi
+• Aqlli chat: "xos nima?", "fibonacci kodi", "10+20" kabi savollarni tushunadi
+• xCPU-1 virtual protsessori, Hamza/Zafar O'zbek tillari
+100% offline ishlaydi.
+"""
+icon = "icons/xos"
+sources = ["src/xos_app"]
+requires = []
+
+[tool.briefcase.app.app.android]
+requires = []
+build_gradle_dependencies = [
+    "androidx.appcompat:appcompat:1.6.1",
+    "com.google.android.material:material:1.11.0",
+]
+base_theme = "Theme.MaterialComponents.Light.NoActionBar"
+feature = [
+    "android.hardware.touchscreen",
+]
+permission = [
+    "android.permission.INTERNET",
+    "android.permission.WRITE_EXTERNAL_STORAGE",
+    "android.permission.READ_EXTERNAL_STORAGE",
+]
+version_code = 500
+min_sdk_version = 26
+target_sdk_version = 34
